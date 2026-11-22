@@ -22,14 +22,6 @@ The application is designed with a clean, minimal interface and a straightforwar
 - **Minimal Interface** – Clean and simple user experience.
 - **Android Support** – Available as an installable Android APK.
 
-## Screenshots
-
-<!-- Add application screenshots here -->
-
-<p align="center">
-  <img src="screenshots/home.png" width="250" alt="AR Measure Home Screen">
-  <img src="screenshots/measurement.png" width="250" alt="AR Measurement Screen">
-</p>
 
 ## How It Works
 
