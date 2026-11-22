@@ -154,7 +154,4 @@ AR measurements are estimates and should not replace calibrated measuring instru
 - Object and surface measurement capabilities.
 
 
-## License
-
-See the [LICENSE](LICENSE) file for the licensing terms of this project.
-Yes,Its Vibe coded.
+Yes, Its Vibe coded.
