@@ -1,0 +1,8 @@
+{
+	"appId": "com.venchy.armeasure",
+	"appName": "AR Measure",
+	"webDir": "dist",
+	"android": {
+		"backgroundColor": "#00000000"
+	}
+}
