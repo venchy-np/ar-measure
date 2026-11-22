@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AR Measure</string>
+    <string name="title_activity_main">AR Measure</string>
+    <string name="package_name">com.venchy.armeasure</string>
+    <string name="custom_url_scheme">com.venchy.armeasure</string>
+</resources>

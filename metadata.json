@@ -1,0 +1,6 @@
+{
+  "name": "AR Measure",
+  "description": "Minimalist responsive augmented reality measurement workspace built with React and Vite, designed for Capacitor and native Android ARCore integration.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
