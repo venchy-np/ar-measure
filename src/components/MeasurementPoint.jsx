@@ -3,15 +3,13 @@ import React from 'react';
 /**
  * Small circular endpoint marker anchored to projected normalized screen coordinates (0..1).
  */
-export default function MeasurementPoint({ point, variant = 'first' }) {
+export default function MeasurementPoint({ point, variant = 'first', index = 1 }) {
   if (!point || point.visible === false) return null;
-
-  const isFirst = variant === 'first';
 
   return (
     <div
-      data-testid={isFirst ? 'measurement-point-first' : 'measurement-point-second'}
-      aria-label={isFirst ? 'First measurement point' : 'Second measurement point'}
+      data-testid={`measurement-point-${index}`}
+      aria-label={`Measurement point ${index}`}
       style={{
         left: `${point.x * 100}%`,
         top: `${point.y * 100}%`,
@@ -24,9 +22,7 @@ export default function MeasurementPoint({ point, variant = 'first' }) {
           aria-hidden="true"
         />
         <span className="ar-endpoint-marker relative flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-[#38BDF8] shadow-[0_0_0_3px_rgba(8,10,13,0.72)]">
-          <span className="sr-only">
-            {isFirst ? 'Point 1' : 'Point 2'}
-          </span>
+          <span className="sr-only">Point {index}</span>
         </span>
       </span>
     </div>

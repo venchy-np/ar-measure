@@ -14,6 +14,11 @@ export default function BridgeInfoDialog({
   phase,
   distanceMeters,
   cameraStatus,
+  cameraResolution = '1920x1080 (1080p HD)',
+  qualityMode = 'High Quality (1080p)',
+  zoom = '1x',
+  onZoomChange,
+  onQualityChange,
 }) {
   useEffect(() => {
     if (!isOpen) return;
@@ -96,6 +101,18 @@ export default function BridgeInfoDialog({
             </dd>
           </div>
           <div className="flex items-center justify-between py-2.5">
+            <dt className="text-[#8D96A6]">Capture Quality</dt>
+            <dd className="font-mono-tabular text-emerald-400 font-medium">
+              {qualityMode}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between py-2.5">
+            <dt className="text-[#8D96A6]">Camera Resolution</dt>
+            <dd className="font-mono-tabular text-[#F4F5F7]">
+              {cameraResolution}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between py-2.5">
             <dt className="text-[#8D96A6]">Display Unit</dt>
             <dd className="font-mono-tabular text-[#38BDF8]">{activeUnit}</dd>
           </div>
@@ -109,6 +126,57 @@ export default function BridgeInfoDialog({
           </div>
         </dl>
 
+        {/* Interactive Camera Zoom & Quality Controls */}
+        <div className="mt-4 space-y-3 pt-3 border-t border-white/[0.07]">
+          <div>
+            <label className="block text-[11px] font-medium text-[#8D96A6] mb-1.5">
+              Camera Zoom Setting
+            </label>
+            <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Camera Zoom">
+              {['0.5x', '1x', '2x', '4x'].map((z) => (
+                <button
+                  key={z}
+                  type="button"
+                  onClick={() => onZoomChange?.(z)}
+                  className={`min-h-[36px] rounded-xl px-2 py-1 text-xs font-semibold transition-colors ${
+                    zoom === z
+                      ? 'bg-[#38BDF8] text-[#080A0D]'
+                      : 'bg-white/[0.04] text-[#A8B1C0] hover:bg-white/[0.08] hover:text-white'
+                  }`}
+                >
+                  {z}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-medium text-[#8D96A6] mb-1.5">
+              Capture Quality & Resolution
+            </label>
+            <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Capture Quality">
+              {[
+                { label: '720p HD', res: '1280x720 (720p)' },
+                { label: '1080p Full HD', res: '1920x1080 (1080p HD)' },
+                { label: '4K Ultra HD', res: '3840x2160 (4K UHD)' },
+              ].map((q) => (
+                <button
+                  key={q.label}
+                  type="button"
+                  onClick={() => onQualityChange?.(q.label, q.res)}
+                  className={`min-h-[36px] rounded-xl px-2 py-1 text-xs font-semibold transition-colors ${
+                    qualityMode === q.label
+                      ? 'bg-emerald-400 text-[#080A0D]'
+                      : 'bg-white/[0.04] text-[#A8B1C0] hover:bg-white/[0.08] hover:text-white'
+                  }`}
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <p className="mt-4 text-xs leading-relaxed text-[#8D96A6]">
           Measurements are stored in metres and converted for display. Native Android builds supply
           projected screen points and 3D world distances via{' '}
@@ -118,7 +186,7 @@ export default function BridgeInfoDialog({
           .
         </p>
 
-        <div className="mt-5 flex justify-end">
+        <div className="mt-5 flex flex-col sm:flex-row-reverse sm:items-center sm:justify-between gap-3 text-center sm:text-left">
           <button
             type="button"
             onClick={onClose}
@@ -126,6 +194,15 @@ export default function BridgeInfoDialog({
           >
             Done
           </button>
+          <a
+            href="https://www.sajandhl.qzz.io/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-white/30 hover:text-white/60 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#38BDF8] py-1"
+            aria-label="Visit author website"
+          >
+            - sajan.
+          </a>
         </div>
       </div>
     </div>

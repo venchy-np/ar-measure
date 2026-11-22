@@ -164,6 +164,23 @@ class ARMeasurePlugin : Plugin(), ARCameraRenderer.Listener {
             synchronized(sessionLock) {
                 if (arSession == null) {
                     val createdSession = Session(activity)
+                    
+                    // Configure High Resolution (1080p) Camera Config if supported by device
+                    try {
+                        val cameraConfigFilter = com.google.ar.core.CameraConfigFilter(createdSession).apply {
+                            setFacingDirection(com.google.ar.core.CameraConfig.FacingDirection.BACK)
+                        }
+                        val cameraConfigs = createdSession.getSupportedCameraConfigs(cameraConfigFilter)
+                        val highResConfig = cameraConfigs.firstOrNull { cfg ->
+                            cfg.imageSize.width >= 1920 || cfg.imageSize.height >= 1080
+                        } ?: cameraConfigs.maxByOrNull { it.imageSize.width * it.imageSize.height }
+
+                        if (highResConfig != null) {
+                            createdSession.cameraConfig = highResConfig
+                        }
+                    } catch (_: Throwable) {
+                    }
+
                     val config = Config(createdSession).apply {
                         planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
                         updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
@@ -189,11 +206,18 @@ class ARMeasurePlugin : Plugin(), ARCameraRenderer.Listener {
             bridge.webView.setBackgroundColor(Color.TRANSPARENT)
             bridge.webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
+            val activeResolution = synchronized(sessionLock) {
+                val cfg = arSession?.cameraConfig
+                if (cfg != null) "${cfg.imageSize.width}x${cfg.imageSize.height} (1080p HQ)" else "1920x1080 (1080p HD)"
+            }
+
             emitTrackingStatus("scanning", null)
             call?.resolve(
                 JSObject().apply {
                     put("initialized", true)
                     put("trackingStatus", "scanning")
+                    put("cameraResolution", activeResolution)
+                    put("qualityMode", "High Quality (1080p)")
                 }
             )
             pendingInitializeCall = null

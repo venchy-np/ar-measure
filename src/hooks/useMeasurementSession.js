@@ -15,7 +15,7 @@ import {
 } from '../utils/measurementState.js';
 
 /**
- * Dedicated React hook managing the two-point measurement workflow,
+ * Dedicated React hook managing the multi-point chain measurement workflow,
  * unit conversion from underlying metres, and native ARCore bridge delegation via useARBridge.
  */
 export function useMeasurementSession() {
@@ -58,6 +58,14 @@ export function useMeasurementSession() {
     dispatch({ type: 'SET_UNIT', unit: nextUnit });
   }, []);
 
+  const setZoom = useCallback((zoom) => {
+    dispatch({ type: 'SET_ZOOM', zoom });
+  }, []);
+
+  const setQuality = useCallback((qualityMode, cameraResolution) => {
+    dispatch({ type: 'SET_QUALITY', qualityMode, cameraResolution });
+  }, []);
+
   const startNewMeasurement = useCallback(async () => {
     if (bridgeIsNativeAR) {
       await bridgeResetMeasurement();
@@ -80,6 +88,10 @@ export function useMeasurementSession() {
     },
     [bridgeIsNativeAR, bridgePlaceMeasurementPoint]
   );
+
+  const completeMeasurement = useCallback(() => {
+    dispatch({ type: 'COMPLETE_MEASUREMENT' });
+  }, []);
 
   const resetMeasurement = useCallback(async () => {
     if (resetTimerRef.current) {
@@ -107,25 +119,36 @@ export function useMeasurementSession() {
       ? formatDistance(state.liveDistanceMeters, state.unit)
       : null;
 
+  const formattedSegments = state.segments.map((seg) => formatDistance(seg, state.unit));
+
   return {
     unit: state.unit,
     phase: state.phase,
     trackingStatus: state.trackingStatus,
-    firstPoint: state.firstPoint,
-    secondPoint: state.secondPoint,
+    points: state.points,
+    segments: state.segments,
+    firstPoint: state.points[0] ?? null,
+    secondPoint: state.points[state.points.length - 1] && state.points.length >= 2 ? state.points[state.points.length - 1] : null,
     distanceMeters: state.distanceMeters,
     liveDistanceMeters: state.liveDistanceMeters,
     formattedDistance,
     formattedLiveDistance,
+    formattedSegments,
     resetCount: state.resetCount,
     capabilities: state.capabilities,
+    cameraResolution: state.cameraResolution,
+    qualityMode: state.qualityMode,
+    zoom: state.zoom,
     arBridge,
     instruction,
     statusSummary,
     isResetting,
     setUnit,
+    setZoom,
+    setQuality,
     startNewMeasurement,
     placePoint,
+    completeMeasurement,
     resetMeasurement,
     receiveNativeUpdate,
   };

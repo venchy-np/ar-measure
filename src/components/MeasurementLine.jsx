@@ -1,16 +1,11 @@
 import React from 'react';
-import { RETICLE_CENTER_POINT } from '../utils/measurementState.js';
 
 /**
- * Crisp sky-blue SVG line connecting the first measurement point to either
- * the second measurement point (completed) or the live middle crosshair (aiming).
+ * Crisp sky-blue SVG line connecting two measurement points or point to live reticle.
  */
-export default function MeasurementLine({ firstPoint, secondPoint }) {
+export default function MeasurementLine({ firstPoint, secondPoint, isLive = false }) {
   if (!firstPoint || firstPoint.visible === false) return null;
-  if (secondPoint && secondPoint.visible === false) return null;
-
-  const isCompleted = Boolean(secondPoint);
-  const endPoint = secondPoint ?? RETICLE_CENTER_POINT;
+  if (!secondPoint || secondPoint.visible === false) return null;
 
   return (
     <svg
@@ -21,8 +16,8 @@ export default function MeasurementLine({ firstPoint, secondPoint }) {
       <line
         x1={`${firstPoint.x * 100}%`}
         y1={`${firstPoint.y * 100}%`}
-        x2={`${endPoint.x * 100}%`}
-        y2={`${endPoint.y * 100}%`}
+        x2={`${secondPoint.x * 100}%`}
+        y2={`${secondPoint.y * 100}%`}
         stroke="#080A0D"
         strokeOpacity="0.55"
         strokeWidth="4.5"
@@ -31,12 +26,13 @@ export default function MeasurementLine({ firstPoint, secondPoint }) {
       <line
         x1={`${firstPoint.x * 100}%`}
         y1={`${firstPoint.y * 100}%`}
-        x2={`${endPoint.x * 100}%`}
-        y2={`${endPoint.y * 100}%`}
+        x2={`${secondPoint.x * 100}%`}
+        y2={`${secondPoint.y * 100}%`}
         stroke="#38BDF8"
-        strokeOpacity={isCompleted ? '0.98' : '0.88'}
+        strokeOpacity={isLive ? '0.78' : '0.98'}
         strokeWidth="2.25"
         strokeLinecap="round"
+        strokeDasharray={isLive ? '6 6' : undefined}
       />
     </svg>
   );

@@ -6,33 +6,28 @@ import { MEASUREMENT_PHASES, TRACKING_STATUSES } from '../utils/measurementState
 /**
  * Floating bottom HUD matching the screenshot layout:
  * - Segmented unit selector pill (`cm | ft | m`)
- * - 3-button shutter row: Left Reset, Center `+` shutter button, Right Confirm (`✓`)
+ * - 3-button shutter row: Left Reset, Center `+` shutter button (adds point / continues chain), Right Done (`✓` finalizes measurement)
  */
 export default function MeasurementControls({
   unit,
   phase,
   trackingStatus,
+  points = [],
   formattedDistance,
   formattedLiveDistance,
   onUnitChange,
   onPlacePoint,
+  onCompleteMeasurement,
   onStartNewMeasurement,
   onReset,
   statusSummary,
   resetCount,
 }) {
   const isTrackingLost = trackingStatus === TRACKING_STATUSES.TRACKING_LOST;
-  const isInitial = phase === MEASUREMENT_PHASES.INITIAL;
-  const isFirstPoint = phase === MEASUREMENT_PHASES.FIRST_POINT;
+  const isInitial = phase === MEASUREMENT_PHASES.INITIAL || points.length === 0;
   const isCompleted = phase === MEASUREMENT_PHASES.COMPLETED;
 
-  const primaryAriaLabel = isCompleted
-    ? 'Start a new measurement'
-    : isFirstPoint
-      ? 'Place second measurement point'
-      : 'Start measurement and place first point';
-
-  const handlePrimaryAction = () => {
+  const handlePlusAction = () => {
     if (isCompleted) {
       onStartNewMeasurement();
       return;
@@ -40,24 +35,27 @@ export default function MeasurementControls({
     onPlacePoint();
   };
 
-  const handleConfirmAction = () => {
-    if (isFirstPoint) {
-      onPlacePoint();
-      return;
-    }
+  const handleDoneAction = () => {
     if (isCompleted) {
       onStartNewMeasurement();
+      return;
+    }
+    if (points.length >= 2) {
+      onCompleteMeasurement();
+      return;
+    }
+    if (points.length === 1) {
+      onPlacePoint();
+      onCompleteMeasurement();
     }
   };
 
-  const isConfirmDisabled = isInitial || (isFirstPoint && isTrackingLost);
-  const activeReadout = isFirstPoint
-    ? (formattedLiveDistance ?? formattedDistance)
-    : formattedDistance;
+  const isDoneDisabled = isInitial || (points.length === 0 && isTrackingLost);
+  const activeReadout = points.length >= 1 ? (formattedLiveDistance ?? formattedDistance) : formattedDistance;
 
   return (
     <footer className="ar-hud-bottom pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col items-center gap-3 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-      {/* Accessible screen-reader readout keeping status and formatted value exposed */}
+      {/* Accessible screen-reader readout */}
       <div className="sr-only">
         <span data-testid="measurement-status">{statusSummary.measurementLabel}</span>
         <span data-testid="active-distance-readout">{activeReadout}</span>
@@ -92,7 +90,7 @@ export default function MeasurementControls({
         })}
       </div>
 
-      {/* 3-Button Shutter Row: Reset (Left), + Shutter (Center), Check (Right) */}
+      {/* 3-Button Shutter Row: Reset (Left), + Shutter (Center), Done (Right) */}
       <div className="pointer-events-auto flex items-center justify-center gap-7 sm:gap-9">
         <button
           type="button"
@@ -107,9 +105,9 @@ export default function MeasurementControls({
 
         <button
           type="button"
-          onClick={handlePrimaryAction}
+          onClick={handlePlusAction}
           disabled={isTrackingLost}
-          aria-label={primaryAriaLabel}
+          aria-label={isCompleted ? 'Start new measurement' : 'Add measurement point'}
           data-testid="primary-measure-action"
           className="ar-shutter-main flex h-16 w-16 items-center justify-center rounded-full bg-white text-[#0B0E14] shadow-[0_0_0_4px_rgba(255,255,255,0.22),0_12px_28px_rgba(0,0,0,0.65)] transition-transform active:scale-95 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#38BDF8]"
         >
@@ -118,14 +116,12 @@ export default function MeasurementControls({
 
         <button
           type="button"
-          onClick={handleConfirmAction}
-          disabled={isConfirmDisabled}
+          onClick={handleDoneAction}
+          disabled={isDoneDisabled}
           data-testid="confirm-measure-action"
-          aria-label={
-            isCompleted ? 'Finish and start new measurement' : 'Place final measurement mark'
-          }
+          aria-label="Complete measurement and finish chain"
           className={`ar-shutter-side flex h-12 w-12 items-center justify-center rounded-full shadow-xl shadow-black/55 transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#38BDF8] ${
-            isConfirmDisabled
+            isDoneDisabled
               ? 'ar-glass-surface text-white/40 opacity-45 cursor-not-allowed'
               : 'bg-white text-[#0B0E14] hover:bg-slate-100 active:scale-95'
           }`}

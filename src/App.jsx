@@ -19,10 +19,15 @@ export default function App() {
     formattedLiveDistance,
     resetCount,
     capabilities,
+    cameraResolution,
+    qualityMode,
+    zoom,
     instruction,
     statusSummary,
     isResetting,
     setUnit,
+    setZoom,
+    setQuality,
     startNewMeasurement,
     placePoint,
     resetMeasurement,
@@ -53,6 +58,7 @@ export default function App() {
         formattedLiveDistance={formattedLiveDistance}
         onPlacePoint={placePoint}
         camera={camera}
+        zoom={zoom}
       />
 
       <Header
@@ -89,6 +95,11 @@ export default function App() {
         phase={phase}
         distanceMeters={distanceMeters}
         cameraStatus={camera.status}
+        cameraResolution={cameraResolution}
+        qualityMode={qualityMode}
+        zoom={zoom}
+        onZoomChange={setZoom}
+        onQualityChange={setQuality}
       />
     </div>
   );

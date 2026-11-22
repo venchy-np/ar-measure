@@ -17,7 +17,6 @@ import {
   INSTRUCTIONS,
   MEASUREMENT_PHASES,
   PREVIEW_DEFAULT_FIRST_POINT,
-  PREVIEW_DEFAULT_SECOND_POINT,
   TRACKING_STATUSES,
   createInitialMeasurementState,
   getContextualInstruction,
@@ -121,47 +120,56 @@ test('getSmartDistanceLabelLayout flips below near top edge and clamps inside vi
   );
 });
 
-test('two-point measurement state machine progresses through initial, first point, completed, and reset', () => {
+test('multi-point chain measurement state machine progresses through initial, chain, completed, and reset', () => {
   let state = createInitialMeasurementState('m');
   assert.equal(state.phase, MEASUREMENT_PHASES.INITIAL);
   assert.equal(getContextualInstruction(state), INSTRUCTIONS.INITIAL);
 
   // Place first point
   state = measurementReducer(state, { type: 'PLACE_POINT' });
-  assert.equal(state.phase, MEASUREMENT_PHASES.FIRST_POINT);
-  assert.deepEqual(state.firstPoint, PREVIEW_DEFAULT_FIRST_POINT);
-  assert.equal(state.secondPoint, null);
+  assert.equal(state.phase, MEASUREMENT_PHASES.CHAIN);
+  assert.equal(state.points.length, 1);
+  assert.equal(state.segments.length, 0);
   assert.equal(state.distanceMeters, null);
-  assert.equal(getContextualInstruction(state), INSTRUCTIONS.FIRST_POINT);
+  assert.equal(getContextualInstruction(state), INSTRUCTIONS.CHAIN_SINGLE);
 
-  // Place second point in web preview (distance remains null, never faked)
+  // Place second point in web preview (adds segment and second point)
   state = measurementReducer(state, { type: 'PLACE_POINT' });
+  assert.equal(state.phase, MEASUREMENT_PHASES.CHAIN);
+  assert.equal(state.points.length, 2);
+  assert.equal(state.segments.length, 1);
+  assert.equal(getContextualInstruction(state), INSTRUCTIONS.CHAIN_MULTIPLE);
+
+  // Complete measurement
+  state = measurementReducer(state, { type: 'COMPLETE_MEASUREMENT' });
   assert.equal(state.phase, MEASUREMENT_PHASES.COMPLETED);
-  assert.deepEqual(state.secondPoint, PREVIEW_DEFAULT_SECOND_POINT);
-  assert.equal(state.distanceMeters, null);
   assert.equal(getContextualInstruction(state), INSTRUCTIONS.COMPLETED_PREVIEW);
 
   // Reset returns to initial state
   state = measurementReducer(state, { type: 'RESET' });
   assert.equal(state.phase, MEASUREMENT_PHASES.INITIAL);
-  assert.equal(state.firstPoint, null);
-  assert.equal(state.secondPoint, null);
+  assert.equal(state.points.length, 0);
+  assert.equal(state.segments.length, 0);
   assert.equal(state.distanceMeters, null);
   assert.equal(state.resetCount, 1);
   assert.equal(getContextualInstruction(state), INSTRUCTIONS.INITIAL);
 });
 
-test('receives native ARCore tracking status, screen points, and distance in metres', () => {
+test('receives native ARCore tracking status, multi-points, and distance in metres', () => {
   let state = createInitialMeasurementState('cm');
 
-  // Native ARCore sends completed measurement frame
+  // Native ARCore sends completed measurement frame with multiple points & segments
   state = measurementReducer(state, {
     type: 'RECEIVE_NATIVE_UPDATE',
     payload: {
       trackingStatus: TRACKING_STATUSES.TRACKING,
-      firstPoint: { x: 0.25, y: 0.4 },
-      secondPoint: { x: 0.75, y: 0.6 },
-      distanceMeters: 2.35,
+      points: [
+        { x: 0.2, y: 0.3 },
+        { x: 0.5, y: 0.5 },
+        { x: 0.8, y: 0.7 },
+      ],
+      segments: [1.2, 1.15],
+      phase: MEASUREMENT_PHASES.COMPLETED,
     },
   });
 
@@ -192,19 +200,20 @@ test('receives native ARCore tracking status, screen points, and distance in met
   assert.equal(getMeasurementStatusSummary(state).measurementLabel, 'Invalid Point');
 });
 
-test('tracks liveDistanceMeters while aiming from first point and clears on complete/reset', () => {
+test('tracks liveDistanceMeters while aiming from last point and clears on complete/reset', () => {
   let state = createInitialMeasurementState('m');
 
   state = measurementReducer(state, {
     type: 'RECEIVE_NATIVE_UPDATE',
     payload: {
       trackingStatus: TRACKING_STATUSES.TRACKING,
-      firstPoint: { x: 0.3, y: 0.45, visible: true },
+      points: [{ x: 0.3, y: 0.45, visible: true }],
       liveDistanceMeters: 0.84,
+      phase: MEASUREMENT_PHASES.CHAIN,
     },
   });
 
-  assert.equal(state.phase, MEASUREMENT_PHASES.FIRST_POINT);
+  assert.equal(state.phase, MEASUREMENT_PHASES.CHAIN);
   assert.equal(state.liveDistanceMeters, 0.84);
   assert.equal(formatDistance(state.liveDistanceMeters, state.unit), '0.84 m');
 
@@ -212,9 +221,12 @@ test('tracks liveDistanceMeters while aiming from first point and clears on comp
     type: 'RECEIVE_NATIVE_UPDATE',
     payload: {
       trackingStatus: TRACKING_STATUSES.TRACKING,
-      firstPoint: { x: 0.3, y: 0.45, visible: true },
-      secondPoint: { x: 0.65, y: 0.55, visible: true },
-      distanceMeters: 1.24,
+      points: [
+        { x: 0.3, y: 0.45, visible: true },
+        { x: 0.65, y: 0.55, visible: true },
+      ],
+      segments: [1.24],
+      phase: MEASUREMENT_PHASES.COMPLETED,
     },
   });
 
@@ -227,4 +239,5 @@ test('tracks liveDistanceMeters while aiming from first point and clears on comp
   assert.equal(state.liveDistanceMeters, null);
   assert.equal(state.distanceMeters, null);
 });
+
 

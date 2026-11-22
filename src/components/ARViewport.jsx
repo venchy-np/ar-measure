@@ -27,6 +27,7 @@ export default function ARViewport({
   formattedLiveDistance,
   onPlacePoint,
   camera,
+  zoom = '1x',
 }) {
   const viewportRef = useRef(null);
   const [viewportMetrics, setViewportMetrics] = useState(null);
@@ -170,7 +171,8 @@ export default function ARViewport({
             muted
             data-testid="camera-video"
             aria-label="Live camera preview"
-            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+            style={{ transform: `scale(${zoom === '0.5x' ? 0.5 : zoom === '2x' ? 2 : zoom === '4x' ? 4 : 1})`, transformOrigin: 'center center' }}
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-transform duration-200 transition-opacity duration-300 ${
               isCameraActive ? 'opacity-100' : 'opacity-0'
             }`}
           />
@@ -225,16 +227,18 @@ export default function ARViewport({
           </div>
         )}
 
-        {/* Center Aiming Reticle */}
+        {/* Center Aiming Reticle (Small Plus) */}
         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
           <div
             data-testid="aiming-reticle"
             aria-label="Center aiming reticle"
-            className={`ar-reticle-ring ar-landscape-reticle relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border-2 bg-black/10 ${reticleRingClass}`}
+            className={`relative flex h-4 w-4 items-center justify-center transition-opacity duration-200 ${
+              isCompleted ? 'opacity-0 scale-90' : isTrackingLost ? 'opacity-50' : 'opacity-100'
+            }`}
           >
-            <span
-              className={`h-2 w-2 rounded-full shadow-[0_0_6px_rgba(0,0,0,0.6)] ${reticleDotClass}`}
-            />
+            <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] bg-white shadow-[0_0_3px_rgba(0,0,0,0.9)]" />
+            <span className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-white shadow-[0_0_3px_rgba(0,0,0,0.9)]" />
+            <span className={`relative h-1 w-1 rounded-full shadow-[0_0_3px_rgba(0,0,0,0.9)] ${reticleDotClass}`} />
           </div>
         </div>
       </section>
